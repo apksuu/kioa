@@ -3,321 +3,273 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEON // GENESIS - Tech Interface</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    
+    <title>环境监测终端 // AUTO-SCAN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #050a14;
-            --neon-blue: #00f3ff;
-            --neon-purple: #bc13fe;
-            --neon-green: #0aff0a;
-            --text-color: #e0e0e0;
-            --grid-color: rgba(0, 243, 255, 0.1);
+            --core-color: #00f3ff;
+            --warn-color: #ff3366;
+            --bg-color: #020408;
+            --panel-bg: rgba(2, 4, 8, 0.85);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            background-color: var(--bg-dark);
-            color: var(--text-color);
-            font-family: 'Share Tech Mono', monospace;
+            background-color: var(--bg-color);
+            color: var(--core-color);
+            font-family: 'Orbitron', 'Noto Sans SC', sans-serif;
             height: 100vh;
             overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
-            position: relative;
         }
 
-        /* --- 背景特效层 --- */
-        /* 1. 网格背景 */
-        .bg-grid {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-image: 
-                linear-gradient(var(--grid-color) 1px, transparent 1px),
-                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-            background-size: 30px 30px;
-            z-index: -2;
-            perspective: 1000px;
-            transform: scale(1.5) rotateX(60deg); /* 制造空间透视感 */
-            opacity: 0.6;
-            animation: gridMove 20s linear infinite;
-        }
-
-        /* 2. 扫描线效果 */
-        .scanlines {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: repeating-linear-gradient(
-                to bottom,
-                transparent 0px,
-                transparent 2px,
-                rgba(0, 0, 0, 0.5) 3px,
-                rgba(0, 0, 0, 0.5) 4px
-            );
-            z-index: 10;
-            pointer-events: none;
-            opacity: 0.7;
-        }
-        
-        /* 3. 缓慢移动的光晕 */
-        .ambient-glow {
-            position: absolute;
-            top: 50%; left: 50%;
-            width: 80vw; height: 80vh;
-            background: radial-gradient(circle, rgba(188,19,254,0.2) 0%, rgba(0,243,255,0.1) 50%, transparent 70%);
-            transform: translate(-50%, -50%);
+        /* 背景：旋转的星球扫描线 */
+        .radar-bg {
+            position: absolute; width: 80vh; height: 80vh;
+            border: 1px dashed rgba(0, 243, 255, 0.2);
+            border-radius: 50%;
             z-index: -1;
-            filter: blur(50px);
-            opacity: 0.5;
+            animation: spin 60s linear infinite;
+        }
+        .radar-bg::before {
+            content: ''; position: absolute; top: 50%; left: 50%;
+            width: 100%; height: 2px; background: linear-gradient(90deg, transparent 50%, rgba(0,243,255,0.1) 50%);
+            transform-origin: 0 0; animation: scan 4s linear infinite;
         }
 
-        /* --- 主界面容器 --- */
-        .main-interface {
-            width: 90%;
-            max-width: 1000px;
-            height: 80vh;
-            border: 2px solid var(--neon-blue);
-            background: rgba(5, 10, 20, 0.8);
-            box-shadow: 0 0 20px var(--neon-blue), inset 0 0 30px rgba(0, 243, 255, 0.2);
-            position: relative;
-            backdrop-filter: blur(5px);
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-        }
-
-        /* 角落装饰 */
-        .corner {
-            position: absolute; width: 30px; height: 30px;
-            border: 3px solid var(--neon-blue);
-        }
-        .corner-tl { top: -5px; left: -5px; border-right: none; border-bottom: none; }
-        .corner-tr { top: -5px; right: -5px; border-left: none; border-bottom: none; }
-        .corner-bl { bottom: -5px; left: -5px; border-right: none; border-top: none; }
-        .corner-br { bottom: -5px; right: -5px; border-left: none; border-top: none; }
-
-        /* 头部 */
-        header {
-            display: flex; justify-content: space-between; align-items: flex-end;
-            border-bottom: 2px solid var(--neon-blue);
-            padding-bottom: 15px;
-            margin-bottom: 20px;
-        }
-
-        h1.main-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 3rem;
-            color: var(--neon-blue);
-            text-transform: uppercase;
-            letter-spacing: 5px;
-            text-shadow: 0 0 10px var(--neon-blue);
-            position: relative;
-        }
-        
-        /* 标题故障效果 */
-        h1.main-title::before, h1.main-title::after {
-            content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.8;
-        }
-        h1.main-title::before {
-            color: var(--neon-purple); z-index: -1; animation: glitch-effect 3s infinite linear alternate-reverse;
-        }
-        h1.main-title::after {
-            color: var(--neon-green); z-index: -2; animation: glitch-effect 2s infinite linear alternate;
-        }
-
-        .system-status {
-            text-align: right; font-size: 0.9rem;
-        }
-        .status-indicator {
-            display: inline-block; width: 10px; height: 10px; background-color: var(--neon-green);
-            border-radius: 50%; margin-right: 5px; box-shadow: 0 0 8px var(--neon-green);
-            animation: pulse 2s infinite;
-        }
-
-        /* 内容区域布局 */
-        .content-grid {
+        /* 主面板容器 */
+        .hud-container {
+            width: 900px; height: 500px;
             display: grid;
-            grid-template-columns: 2fr 1fr;
+            grid-template-columns: 250px 1fr 250px;
+            grid-template-rows: 60px 1fr 60px;
             gap: 20px;
-            flex: 1;
+            position: relative;
         }
 
+        /* 通用边框风格 */
         .panel {
             border: 1px solid rgba(0, 243, 255, 0.3);
-            background: rgba(0,0,0,0.3);
-            padding: 15px;
+            background: rgba(0, 20, 40, 0.4);
+            backdrop-filter: blur(5px);
+            padding: 20px;
+            display: flex; flex-direction: column; justify-content: center;
             position: relative;
         }
-        .panel-header {
-            background: var(--neon-blue); color: var(--bg-dark);
-            padding: 5px 10px; font-weight: bold; display: inline-block;
-            margin-bottom: 15px; font-family: 'Orbitron'; font-size: 0.8rem;
+        /* 角落装饰 */
+        .panel::after {
+            content: ''; position: absolute; bottom: 0; right: 0;
+            width: 10px; height: 10px; border-bottom: 2px solid var(--core-color); border-right: 2px solid var(--core-color);
         }
 
-        /* 数据流模拟 */
-        .data-stream p {
-            margin-bottom: 5px; opacity: 0.8;
-            border-left: 2px solid var(--neon-purple);
-            padding-left: 10px;
+        /* 顶部标题栏 */
+        .header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--core-color); }
+        .sys-title { font-size: 1.5rem; letter-spacing: 5px; font-weight: bold; }
+        .sys-time { font-size: 1.2rem; }
+
+        /* 左侧：系统状态 */
+        .left-side { grid-row: 2 / 3; }
+        .status-item { margin-bottom: 20px; }
+        .label { font-size: 0.8rem; opacity: 0.7; margin-bottom: 5px; }
+        .bar-bg { width: 100%; height: 6px; background: rgba(255,255,255,0.1); }
+        .bar-fill { height: 100%; background: var(--core-color); width: 0%; transition: width 1s; box-shadow: 0 0 10px var(--core-color); }
+
+        /* 中间：核心天气展示 */
+        .center-stage {
+            grid-row: 2 / 3;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border: none; background: transparent;
         }
-        .typing-cursor::after {
-            content: '|'; animation: blink 1s infinite; color: var(--neon-blue);
+        .location-text { font-size: 1.2rem; letter-spacing: 3px; margin-bottom: 10px; color: #fff; }
+        .weather-main { 
+            font-size: 6rem; font-weight: bold; 
+            text-shadow: 0 0 30px var(--core-color);
+            position: relative;
+        }
+        .weather-desc {
+            font-size: 1.5rem; background: var(--core-color); color: #000;
+            padding: 2px 15px; border-radius: 4px; font-weight: bold;
+            margin-top: 10px;
         }
 
-        /* 模块和进度条 */
-        .module-item { margin-bottom: 15px; }
-        .module-label { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem; }
-        .progress-bar-track {
-            height: 10px; background: rgba(0, 243, 255, 0.1); border: 1px solid var(--neon-blue);
-            position: relative; overflow: hidden;
-        }
-        .progress-bar-fill {
-            height: 100%; background: var(--neon-blue);
-            box-shadow: 0 0 10px var(--neon-blue);
-            width: 0%; /* JS控制 */
-            transition: width 1s ease-in-out;
-        }
-        .progress-bar-fill.purple { background: var(--neon-purple); box-shadow: 0 0 10px var(--neon-purple); }
+        /* 右侧：环境数据 */
+        .right-side { grid-row: 2 / 3; text-align: right; }
+        .data-big { font-size: 2.5rem; font-weight: bold; }
+        .unit { font-size: 1rem; opacity: 0.8; }
 
-        /* 底部 */
-        footer {
-            margin-top: 20px;
-            border-top: 1px solid rgba(0, 243, 255, 0.3);
-            padding-top: 10px; font-size: 0.8rem; display: flex; justify-content: space-between; opacity: 0.7;
+        /* 底部：坐标与控制 */
+        .footer { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(0,243,255,0.3); padding-top: 10px; }
+        .coords { font-family: monospace; font-size: 0.9rem; opacity: 0.8; }
+        .btn-reset { 
+            background: transparent; border: 1px solid var(--warn-color); color: var(--warn-color);
+            padding: 5px 15px; cursor: pointer; font-size: 0.8rem;
         }
 
-        /* --- 动画定义 --- */
-        @keyframes gridMove {
-            0% { transform: scale(1.5) rotateX(60deg) translateY(0); }
-            100% { transform: scale(1.5) rotateX(60deg) translateY(30px); }
+        /* 弹窗 */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 999;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: 0.3s;
         }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-        @keyframes glitch-effect {
-            0% { clip-path: inset(20% 0 80% 0); transform: translate(-2px, 2px); }
-            20% { clip-path: inset(60% 0 20% 0); transform: translate(2px, -2px); }
-            40% { clip-path: inset(40% 0 60% 0); transform: translate(-2px, 2px); }
-            60% { clip-path: inset(80% 0 20% 0); transform: translate(2px, -2px); }
-            80% { clip-path: inset(10% 0 90% 0); transform: translate(-2px, 2px); }
-            100% { clip-path: inset(30% 0 70% 0); transform: translate(2px, -2px); }
+        .modal-overlay.show { opacity: 1; pointer-events: all; }
+        .modal-box { width: 400px; padding: 30px; border: 1px solid var(--core-color); background: #050a14; text-align: center; }
+        .modal-box input { width: 100%; padding: 10px; background: #111; border: 1px solid #333; color: #fff; margin: 15px 0; }
+        .modal-box button { background: var(--core-color); border: none; padding: 10px 30px; font-weight: bold; cursor: pointer; }
+
+        @keyframes scan { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes spin { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+        
+        /* 手机适配 */
+        @media (max-width: 768px) {
+            .hud-container { display: flex; flex-direction: column; height: auto; width: 95%; gap: 10px; padding-bottom: 20px; }
+            .left-side, .right-side { padding: 15px; }
+            .radar-bg { width: 100vw; height: 100vw; }
         }
     </style>
 </head>
 <body>
 
-    <div class="bg-grid"></div>
-    <div class="ambient-glow"></div>
-    <div class="scanlines"></div>
+    <div class="radar-bg"></div>
 
-    <main class="main-interface">
-        <div class="corner corner-tl"></div>
-        <div class="corner corner-tr"></div>
-        <div class="corner corner-bl"></div>
-        <div class="corner corner-br"></div>
+    <div class="modal-overlay" id="keyModal">
+        <div class="modal-box">
+            <h2 style="margin-bottom: 10px;">系统初始化</h2>
+            <p style="font-size: 0.9rem; color: #aaa;">请输入 OpenWeatherMap API 密钥</p>
+            <input type="text" id="apiKeyInput" placeholder="d9842fab19aa86c654af8cb0f1163957">
+            <button onclick="saveKey()">启动自动扫描</button>
+        </div>
+    </div>
 
-        <header>
-            <div>
-                 <div style="font-size: 0.8rem; color: var(--neon-purple); letter-spacing: 2px;">// SYSTEM_ROOT.ACCESS</div>
-                 <h1 class="main-title" data-text="NEXUS // CORE">NEXUS // CORE</h1>
-            </div>
-            <div class="system-status">
-                <div>STATUS: <span class="status-indicator"></span>STABLE</div>
-                <div>UPTIME: 00:45:32:19</div>
-            </div>
-        </header>
-
-        <div class="content-grid">
-            <section class="panel data-stream">
-                <div class="panel-header">> TERMINAL_OUTPUT</div>
-                <div id="terminalContent">
-                    <p>> Initializing kernel modules...</p>
-                    <p>> Loading GKI configuration [OK]</p>
-                    <p>> Mounting namespaces... [DONE]</p>
-                    <p>> Verifying security protocols...</p>
-                    <p style="color: var(--neon-green)">> SUCCESS. System ready.</p>
-                    <p>> Awaiting operator input<span class="typing-cursor">_</span></p>
-                </div>
-            </section>
-
-            <section class="panel system-monitor">
-                <div class="panel-header">:: SYSTEM_DIAGNOSTICS</div>
-                
-                <div class="module-item">
-                    <div class="module-label">CPU LOAD <span>[ 8 Core ]</span></div>
-                    <div class="progress-bar-track">
-                        <div class="progress-bar-fill" style="width: 45%" id="cpuBar"></div>
-                    </div>
-                </div>
-
-                <div class="module-item">
-                    <div class="module-label">MEMORY ALLOCATION</div>
-                    <div class="progress-bar-track">
-                        <div class="progress-bar-fill purple" style="width: 72%" id="memBar"></div>
-                    </div>
-                </div>
-
-                <div class="module-item" style="margin-top: 30px;">
-                    <div class="panel-header" style="background: transparent; border: 1px solid var(--neon-blue); color: var(--neon-blue);">Network Map</div>
-                    <div style="height: 100px; border: 1px dashed rgba(0,243,255,0.3); display: flex; justify-content: center; align-items: center; font-size: 0.8rem; color: var(--neon-purple);">
-                        [ LINK ESTABLISHED :: 10 Gbps ]
-                    </div>
-                </div>
-            </section>
+    <div class="hud-container">
+        <div class="header">
+            <div class="sys-title">行星环境监测 // V.5</div>
+            <div class="sys-time" id="clock">00:00:00</div>
         </div>
 
-        <footer>
-            <div>SESSION_ID: TX-994-ALPHA</div>
-            <div>SECURE CONNECTION // ENCRYPTED</div>
-        </footer>
-    </main>
+        <div class="panel left-side">
+            <div class="status-item">
+                <div class="label">定位模块信号</div>
+                <div class="bar-bg"><div class="bar-fill" style="width: 85%;"></div></div>
+            </div>
+            <div class="status-item">
+                <div class="label">API 连接延迟</div>
+                <div class="bar-bg"><div class="bar-fill" style="width: 40%;"></div></div>
+            </div>
+            <div class="status-item">
+                <div class="label">核心温度 (CPU)</div>
+                <div class="bar-bg"><div class="bar-fill" style="width: 60%; background: var(--warn-color);"></div></div>
+            </div>
+        </div>
+
+        <div class="center-stage">
+            <div class="location-text" id="locText">定位中...</div>
+            <div class="weather-main" id="tempVal">--</div>
+            <div class="weather-desc" id="descVal">等待信号</div>
+        </div>
+
+        <div class="panel right-side">
+            <div style="margin-bottom: 30px;">
+                <div class="label">空气湿度</div>
+                <div class="data-big" id="humidVal">--</div>
+                <div class="unit">PERCENT</div>
+            </div>
+            <div>
+                <div class="label">地表风速</div>
+                <div class="data-big" id="windVal">--</div>
+                <div class="unit">METERS/SEC</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="coords" id="coordText">LAT: 00.0000 | LON: 00.0000</div>
+            <button class="btn-reset" onclick="resetSystem()">重置系统</button>
+        </div>
+    </div>
 
     <script>
-        // 简单的脚本让界面动起来，增加科技感
+        // 1. 时间更新
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString('en-GB');
+        }, 1000);
 
-        // 1. 模拟随机变动的进度条
-        function randomizeBars() {
-            const cpu = Math.floor(Math.random() * 40) + 30; // 30-70%
-            const mem = Math.floor(Math.random() * 30) + 60; // 60-90%
-            document.getElementById('cpuBar').style.width = cpu + '%';
-            document.getElementById('memBar').style.width = mem + '%';
+        // 2. API Key 逻辑
+        const modal = document.getElementById('keyModal');
+        let apiKey = localStorage.getItem('weather_api_key_v2');
+
+        if (!apiKey) {
+            modal.classList.add('show');
+        } else {
+            initSystem();
         }
-        setInterval(randomizeBars, 2000);
-        randomizeBars(); // Init
 
-        // 2. 模拟终端数据滚动 (可选)
-        const terminal = document.getElementById('terminalContent');
-        const logs = [
-            "> Scanning /dev/block devices...",
-            "> Applying SELinux contexts...",
-            "> Cgroup v2 mounted at /sys/fs/cgroup",
-            "> Docker daemon socket detected.",
-            "> Analyzing network traffic...",
-            "> Warning: Sub-routine latency detected."
-        ];
-
-        let logIndex = 0;
-        function addLog() {
-            if (logIndex >= logs.length) logIndex = 0;
-            const p = document.createElement('p');
-            p.innerText = logs[logIndex];
-            // 插入在倒数第二个元素前（在光标前）
-            terminal.insertBefore(p, terminal.lastElementChild);
-            
-            // 保持一定数量的日志，防止溢出
-            if(terminal.children.length > 8) {
-                terminal.removeChild(terminal.firstElementChild);
+        function saveKey() {
+            const input = document.getElementById('apiKeyInput').value.trim();
+            if (input) {
+                localStorage.setItem('weather_api_key_v2', input);
+                apiKey = input;
+                modal.classList.remove('show');
+                initSystem();
             }
-            logIndex++;
         }
-        setInterval(addLog, 3500);
 
+        function resetSystem() {
+            localStorage.removeItem('weather_api_key_v2');
+            location.reload();
+        }
+
+        // 3. 自动定位与获取天气
+        function initSystem() {
+            const locText = document.getElementById('locText');
+            locText.innerText = "正在三角定位...";
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(success, error);
+            } else {
+                locText.innerText = "浏览器不支持定位";
+            }
+        }
+
+        function success(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            
+            // 更新底部坐标显示
+            document.getElementById('coordText').innerText = `LAT: ${lat.toFixed(4)} | LON: ${lon.toFixed(4)}`;
+            
+            fetchWeather(lat, lon);
+        }
+
+        function error() {
+            document.getElementById('locText').innerText = "定位权限被拒绝";
+            document.getElementById('descVal').innerText = "信号丢失";
+        }
+
+        async function fetchWeather(lat, lon) {
+            try {
+                // 使用经纬度查询
+                const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=zh_cn`;
+                const res = await fetch(url);
+                const data = await res.json();
+
+                if (data.cod === 200) {
+                    document.getElementById('locText').innerText = `锁定目标: ${data.name}`;
+                    document.getElementById('tempVal').innerText = Math.round(data.main.temp) + "°";
+                    document.getElementById('descVal').innerText = data.weather[0].description;
+                    document.getElementById('humidVal').innerText = data.main.humidity;
+                    document.getElementById('windVal').innerText = data.wind.speed;
+                } else {
+                    document.getElementById('locText').innerText = "数据解析错误";
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('locText').innerText = "API 连接失败";
+            }
+        }
     </script>
 </body>
 </html>
