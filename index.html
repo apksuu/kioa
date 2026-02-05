@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>实时天气信息终端</title>
+    <title>天气信息终端</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -41,87 +41,65 @@
 
         h1 { text-align: center; margin-bottom: 30px; font-weight: 600; }
 
-        /* --- 设置区域 --- */
+        /* 输入区域 */
         .setup-section {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 20px;
+            display: flex; gap: 10px; margin-bottom: 30px;
+            border-bottom: 1px solid var(--border-color); padding-bottom: 20px;
         }
-        .input-group { flex: 1; min-width: 200px; }
         input {
-            width: 100%; padding: 12px; border: 2px solid var(--border-color);
+            flex: 1; padding: 12px; border: 2px solid var(--border-color);
             border-radius: 8px; font-size: 1rem; outline: none; transition: 0.3s;
         }
         input:focus { border-color: var(--accent-color); }
         button {
-            padding: 12px 24px; background-color: var(--accent-color); color: white;
+            padding: 12px 30px; background-color: var(--accent-color); color: white;
             border: none; border-radius: 8px; font-size: 1rem; font-weight: 600;
             cursor: pointer; transition: 0.3s;
         }
         button:hover { background-color: #3182ce; }
 
-        /* --- 错误提示 --- */
+        /* 错误提示 */
         .error-msg {
             color: #e53e3e; background: #fff5f5; padding: 15px; border-radius: 8px;
             margin-bottom: 20px; text-align: center; display: none;
         }
 
-        /* --- 天气结果区域 --- */
-        .weather-result { display: none; } /* 默认隐藏 */
-
-        /* 头部主天气 */
-        .weather-header {
-            text-align: center; margin-bottom: 30px;
-        }
+        /* 天气结果 */
+        .weather-result { display: none; animation: fadeIn 0.5s; }
+        
+        .weather-header { text-align: center; margin-bottom: 30px; }
         .city-name { font-size: 2rem; font-weight: 700; }
-        .main-weather {
-            display: flex; align-items: center; justify-content: center;
-            margin: 10px 0;
-        }
+        .main-weather { display: flex; align-items: center; justify-content: center; margin: 10px 0; }
         .weather-icon { width: 80px; height: 80px; }
         .temperature { font-size: 4rem; font-weight: 700; line-height: 1; }
         .description { font-size: 1.2rem; color: var(--text-secondary); text-transform: capitalize; }
 
-        /* 详细数据网格 */
         .details-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 20px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px;
         }
         .detail-item {
-            background: var(--bg-color);
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
+            background: var(--bg-color); padding: 15px;
+            border-radius: 10px; text-align: center;
         }
         .detail-label { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 5px; }
-        .detail-value { font-size: 1.2rem; font-weight: 600; }
+        .detail-value { font-size: 1.1rem; font-weight: 600; }
 
-        /* 手机适配微调 */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
         @media (max-width: 600px) {
             .container { padding: 20px; margin-top: 0; }
-            .setup-section { flex-direction: column; }
             .temperature { font-size: 3rem; }
-            .details-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-            .detail-item { padding: 15px; }
+            .details-grid { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>天气信息终端</h1>
+    <h1>天气查询</h1>
 
     <div class="setup-section">
-        <div class="input-group">
-            <input type="text" id="apiKeyInput" placeholder="请输入 OpenWeatherMap API Key (首次需要)">
-        </div>
-        <div class="input-group" style="flex: 2;">
-            <input type="text" id="cityInput" placeholder="输入城市名 (例如: 北京, Shanghai)">
-        </div>
+        <input type="text" id="cityInput" placeholder="输入城市名 (例如: 北京)">
         <button onclick="fetchWeather()">查询</button>
     </div>
 
@@ -133,7 +111,7 @@
             <div class="description" id="weatherDesc">--</div>
             <div class="main-weather">
                 <img id="weatherIcon" src="" alt="" class="weather-icon">
-                <div class="temperature"><span id="temp">--</span>°C</div>
+                <div class="temperature"><span id="temp">--</span>°</div>
             </div>
             <div style="color: var(--text-secondary);">
                 最高: <span id="tempMax">--</span>° / 最低: <span id="tempMin">--</span>°
@@ -146,31 +124,31 @@
                 <div class="detail-value"><span id="feelsLike">--</span>°C</div>
             </div>
             <div class="detail-item">
-                <div class="detail-label">空气湿度</div>
+                <div class="detail-label">湿度</div>
                 <div class="detail-value"><span id="humidity">--</span>%</div>
             </div>
             <div class="detail-item">
-                <div class="detail-label">大气压强</div>
+                <div class="detail-label">气压</div>
                 <div class="detail-value"><span id="pressure">--</span> hPa</div>
             </div>
             <div class="detail-item">
-                <div class="detail-label">风速 / 风向</div>
-                <div class="detail-value"><span id="windSpeed">--</span> m/s <span style="font-size:0.8em" id="windDeg"></span></div>
+                <div class="detail-label">风速</div>
+                <div class="detail-value"><span id="windSpeed">--</span> m/s</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">能见度</div>
+                <div class="detail-value"><span id="visibility">--</span> km</div>
             </div>
             <div class="detail-item">
                 <div class="detail-label">云量</div>
                 <div class="detail-value"><span id="clouds">--</span>%</div>
             </div>
-             <div class="detail-item">
-                <div class="detail-label">能见度</div>
-                <div class="detail-value"><span id="visibility">--</span> km</div>
-            </div>
             <div class="detail-item">
-                <div class="detail-label">日出时间</div>
+                <div class="detail-label">日出</div>
                 <div class="detail-value" id="sunrise">--:--</div>
             </div>
             <div class="detail-item">
-                <div class="detail-label">日落时间</div>
+                <div class="detail-label">日落</div>
                 <div class="detail-value" id="sunset">--:--</div>
             </div>
         </div>
@@ -178,117 +156,95 @@
 </div>
 
 <script>
-    const apiKeyInput = document.getElementById('apiKeyInput');
+    // ==========================================
+    // ▼▼▼ 请在这里填入你的 API KEY ▼▼▼
+    const API_KEY = "在这里粘贴你的OpenWeatherMap密钥"; 
+    // ▲▲▲ ======================================
+
     const cityInput = document.getElementById('cityInput');
     const errorBox = document.getElementById('errorBox');
     const resultBox = document.getElementById('resultBox');
 
-    // 页面加载时读取本地存储的 Key
-    window.onload = () => {
-        const savedKey = localStorage.getItem('owm_api_key');
-        if (savedKey) apiKeyInput.value = savedKey;
-    };
+    // 自动聚焦输入框
+    window.onload = () => cityInput.focus();
 
-    // 回车键查询
+    // 回车键支持
     cityInput.addEventListener('keypress', (e) => {
         if(e.key === 'Enter') fetchWeather();
     });
 
     async function fetchWeather() {
-        const apiKey = apiKeyInput.value.trim();
         const city = cityInput.value.trim();
-
-        // 基础验证
-        if (!apiKey) { showError("d9842fab19aa86c654af8cb0f1163957"); return; }
-        if (!city) { showError("枣庄"); return; }
-
-        // 保存 Key 方便下次使用
-        localStorage.setItem('owm_api_key', apiKey);
+        
+        if (API_KEY === "d9842fab19aa86c654af8cb0f1163957" || !API_KEY) {
+            showError("请先在 HTML 代码中填入正确的 API KEY！");
+            return;
+        }
+        if (!city) { 
+            showError("请输入城市名"); 
+            return; 
+        }
 
         hideError();
-        resultBox.style.display = 'none'; // 先隐藏旧结果
+        resultBox.style.display = 'none';
 
         try {
-            // 构建请求 URL (使用公制单位 metric 和中文语言 zh_cn)
-            const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=zh_cn`;
-            
+            const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric&lang=zh_cn`;
             const response = await fetch(url);
             const data = await response.json();
 
             if (response.ok) {
                 displayWeather(data);
             } else {
-                // 处理 API 返回的错误 (如城市未找到, Key错误)
-                showError(data.message || "查询失败，请检查输入");
+                showError(data.message || "查询失败");
             }
-
         } catch (error) {
-            showError("网络错误，请检查您的连接");
+            showError("网络错误，请检查连接");
             console.error(error);
         }
     }
 
     function displayWeather(data) {
-        // 1. 基础信息
         setText('cityName', `${data.name}, ${data.sys.country}`);
         setText('weatherDesc', data.weather[0].description);
         document.getElementById('weatherIcon').src = `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
         
-        // 2. 温度信息 (取整显示)
         setText('temp', Math.round(data.main.temp));
         setText('tempMax', Math.round(data.main.temp_max));
         setText('tempMin', Math.round(data.main.temp_min));
         setText('feelsLike', Math.round(data.main.feels_like));
-
-        // 3. 其他详情
+        
         setText('humidity', data.main.humidity);
         setText('pressure', data.main.pressure);
         setText('windSpeed', data.wind.speed);
-        setText('windDeg', `(${data.wind.deg}°)`);
         setText('clouds', data.clouds.all);
-        setText('visibility', (data.visibility / 1000).toFixed(1)); // 转为公里
+        setText('visibility', (data.visibility / 1000).toFixed(1));
 
-        // 4. 日出日落时间转换
         setText('sunrise', formatTime(data.sys.sunrise, data.timezone));
         setText('sunset', formatTime(data.sys.sunset, data.timezone));
 
-        // 显示结果区域
         resultBox.style.display = 'block';
     }
 
-    // 辅助函数：设置文本内容
     function setText(id, text) {
         document.getElementById(id).innerText = text;
     }
 
-    // 辅助函数：显示错误
     function showError(msg) {
-        errorBox.innerText = "错误: " + msg;
+        errorBox.innerText = "⚠️ " + msg;
         errorBox.style.display = 'block';
-        resultBox.style.display = 'none';
     }
 
-    // 辅助函数：隐藏错误
     function hideError() {
         errorBox.style.display = 'none';
     }
 
-    // 辅助函数：将 Unix 时间戳转换为 HH:mm 格式
-    // 需要考虑目标城市的时區偏移
-    function formatTime(unixTimestamp, timezoneOffset) {
-        // 创建日期对象，时间戳是 UTC
-        const date = new Date(unixTimestamp * 1000);
-        // 获取本地时间与UTC的偏移量（分钟）並转为毫秒
+    function formatTime(unix, offset) {
+        const date = new Date(unix * 1000);
         const localOffset = date.getTimezoneOffset() * 60000;
-        // 目标城市偏移量（秒）转为毫秒
-        const targetOffset = timezoneOffset * 1000;
-        
-        // 计算目标城市的实际时间
+        const targetOffset = offset * 1000;
         const targetDate = new Date(date.getTime() + localOffset + targetOffset);
-
-        const hours = targetDate.getHours().toString().padStart(2, '0');
-        const minutes = targetDate.getMinutes().toString().padStart(2, '0');
-        return `${hours}:${minutes}`;
+        return `${targetDate.getHours().toString().padStart(2, '0')}:${targetDate.getMinutes().toString().padStart(2, '0')}`;
     }
 </script>
 
